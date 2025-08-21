@@ -1,0 +1,27 @@
+services:
+  mysql_db:
+    image: mysql:8.0
+    container_name: mysql_local
+    environment:
+      MYSQL_ROOT_PASSWORD: Admin@D0c. # <--- CHANGE THIS
+      MYSQL_DATABASE: workout_db
+      MYSQL_USER: my_user
+      MYSQL_PASSWORD: Mysql@D0c. # <--- CHANGE THIS
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
+
+  redis_cache:
+    image: redis:latest
+    container_name: redis_local
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  mysql_data:
+  redis_data:
