@@ -1,6 +1,6 @@
 module workout_tracker
 
-go 1.24.5
+go 1.24.4
 
 require (
 	github.com/alexedwards/argon2id v1.0.0

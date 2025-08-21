@@ -5,7 +5,7 @@ run:
 	go run ./cmd/main.go
 
 build:
-	go build -o ./app
+	cd cmd && go build -tags netgo -ldflags '-s -w' -o app
 
 tidy:
 	go mod tidy
