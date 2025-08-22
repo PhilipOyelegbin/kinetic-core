@@ -38,6 +38,66 @@ definitions:
     - new_password
     - old_password
     type: object
+  internal_controllers_workout.WorkoutPlan:
+    properties:
+      description:
+        type: string
+      exercise_id:
+        type: integer
+      name:
+        type: string
+      order:
+        type: integer
+      repetitions:
+        type: integer
+      sets:
+        type: integer
+      weight:
+        type: number
+    type: object
+  internal_controllers_workout.WorkoutSchedule:
+    properties:
+      completed_date:
+        type: string
+      scheduled_date:
+        type: string
+      status:
+        type: string
+      workout_plan_id:
+        type: integer
+    type: object
+  workout_tracker_internal_model_exercise.Exercise:
+    properties:
+      category:
+        type: integer
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      muscle_group:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  workout_tracker_internal_model_exercise.ExerciseCategory:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   workout_tracker_internal_model_user.User:
     properties:
       createdAt:
@@ -83,6 +143,52 @@ info:
   title: Kinetic Core API
   version: "1.0"
 paths:
+  /exercise-categories:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all exercise category
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/workout_tracker_internal_model_exercise.ExerciseCategory'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all exercise category
+      tags:
+      - Exercise
+  /exercises:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all exercises
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/workout_tracker_internal_model_exercise.Exercise'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all exercises
+      tags:
+      - Exercise
   /forgot-password:
     post:
       consumes:
@@ -286,6 +392,39 @@ paths:
       summary: Send verification mail
       tags:
       - Auth
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get the profile information of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/workout_tracker_internal_model_user.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user profile
+      tags:
+      - User
   /users/change-password:
     patch:
       consumes:
@@ -326,39 +465,6 @@ paths:
               type: string
             type: object
       summary: Change user password
-      tags:
-      - User
-  /users/me:
-    get:
-      consumes:
-      - application/json
-      description: Get the profile information of the authenticated user
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/workout_tracker_internal_model_user.User'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Get user profile
       tags:
       - User
   /verify-email:
@@ -402,6 +508,342 @@ paths:
       summary: Verify user email
       tags:
       - Auth
+  /workouts:
+    get:
+      consumes:
+      - application/json
+      description: Get the workout plan of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controllers_workout.WorkoutPlan'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user workout plan
+      tags:
+      - Workout
+    post:
+      consumes:
+      - application/json
+      description: Create a new workout plan for the authenticated user
+      parameters:
+      - description: Workout
+        in: body
+        name: workout
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controllers_workout.WorkoutPlan'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_controllers_workout.WorkoutPlan'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create user workout plan
+      tags:
+      - Workout
+  /workouts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete the workout plan of the authenticated user by id
+      parameters:
+      - description: Workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete user workout plan by id
+      tags:
+      - Workout
+    get:
+      consumes:
+      - application/json
+      description: Get the workout plan of the authenticated user by id
+      parameters:
+      - description: Workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controllers_workout.WorkoutPlan'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user workout plan by id
+      tags:
+      - Workout
+    patch:
+      consumes:
+      - application/json
+      description: Update a workout plan for the authenticated user
+      parameters:
+      - description: Workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Workout
+        in: body
+        name: workout
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controllers_workout.WorkoutPlan'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/internal_controllers_workout.WorkoutPlan'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user workout plan
+      tags:
+      - Workout
+  /workouts/schedules:
+    get:
+      consumes:
+      - application/json
+      description: Get the workout schedule of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controllers_workout.WorkoutSchedule'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user workout schedule
+      tags:
+      - Workout
+    post:
+      consumes:
+      - application/json
+      description: Create a new workout schedule for the authenticated user
+      parameters:
+      - description: Workout Schedule
+        in: body
+        name: schedule
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controllers_workout.WorkoutSchedule'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controllers_workout.WorkoutSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create new user workout schedule
+      tags:
+      - Workout
+  /workouts/schedules/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get the workout schedule of the authenticated user by id
+      parameters:
+      - description: Workout ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controllers_workout.WorkoutSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user workout schedule by id
+      tags:
+      - Workout
 security:
 - BearerAuth: []
 securityDefinitions:

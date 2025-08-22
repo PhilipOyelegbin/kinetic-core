@@ -3,7 +3,9 @@ package config
 import (
 	"log"
 	"os"
-	model "workout_tracker/internal/model/user"
+	exercise "workout_tracker/internal/model/exercise"
+	user "workout_tracker/internal/model/user"
+	workout "workout_tracker/internal/model/workout"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -37,7 +39,10 @@ func GetDB() *gorm.DB {
 func init() {
 	connectDatabase()
 	DB = GetDB()
-	DB.AutoMigrate(&model.User{})
-	log.Println("Connected to database successfully")
+	DB.AutoMigrate(&exercise.ExerciseCategory{})
+	DB.AutoMigrate(&exercise.Exercise{})
+	DB.AutoMigrate(&user.User{})
+	DB.AutoMigrate(&workout.WorkoutPlan{})
+	DB.AutoMigrate(&workout.WorkoutSchedule{})
+	log.Println("Database migrated and connected successfully")
 }
-

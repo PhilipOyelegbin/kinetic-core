@@ -4,6 +4,8 @@
 
 This project involves creating a backend system for a workout tracker application where users can sign up, log in, create workout plans, and track their progress. The system will feature JWT authentication, CRUD operations for workouts, and generate reports on past workouts.
 
+- Click **[here](https://kinetic-core.onrender.com)** to preview tha API
+
 ## ✨ Requirements
 
 You are required to develop an API for a workout tracker application that allows users to manage their workouts and track their progress. Your first task is to think about the database schema and the API endpoints that will be needed to support the application’s functionality. Here are some of the key features you should consider:

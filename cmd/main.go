@@ -29,19 +29,19 @@ import (
 // @in header
 // @name Authorization
 // @description Type "Bearer" and then your JWT token to authorize
-
 func main() {
 	env := config.LoadEnv()
 	if env != nil {
 		log.Fatal("Error loading .env file")
 	}
 	app := gin.Default()
+	app.Use(gin.Recovery())
+	app.Use(gin.Logger())
 	api := app.Group("/api/v1")
 	{
 		api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 		routes.RegisterRoutes(api)
 	}
-
 
 	app.GET("/", gin.HandlerFunc(func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/api/v1/swagger/index.html")

@@ -8,7 +8,7 @@ type User struct {
 	gorm.Model
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
-	Email      string `json:"email"`
+	Email      string `json:"email" gorm:"unique;not null"`
 	Password   string `json:"password"`
 	IsVerified bool   `json:"is_verified" gorm:"default:false"`
 	VerifyToken string `json:"verify_token" gorm:"default:null"`

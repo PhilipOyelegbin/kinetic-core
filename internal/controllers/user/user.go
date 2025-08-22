@@ -12,8 +12,8 @@ import (
 )
 
 type ChangePassword struct {
-	OldPassword string `json:"old_password" binding:"required"`
-	NewPassword string `json:"new_password" binding:"required"`
+	OldPassword     string `json:"old_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required"`
 	ConfirmPassword string `json:"confirm_password" binding:"required"`
 }
 
@@ -26,7 +26,7 @@ type ChangePassword struct {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /users/me [get]
+// @Router /users [get]
 func GetMyProfile(c *gin.Context) {
 	userId, err := utils.ExtractUserIdFromJWTToken(c.Request)
 	if err != nil {
@@ -44,9 +44,9 @@ func GetMyProfile(c *gin.Context) {
 	}
 	// delete(user, "password") // Remove sensitive information
 	c.JSON(http.StatusOK, gin.H{
-		"first_name": user.FirstName,
-		"last_name":  user.LastName,
-		"email":     user.Email,
+		"first_name":  user.FirstName,
+		"last_name":   user.LastName,
+		"email":       user.Email,
 		"is_verified": user.IsVerified,
 	})
 }

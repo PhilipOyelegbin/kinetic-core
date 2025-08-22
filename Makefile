@@ -15,3 +15,6 @@ db-up:
 
 db-down:
 	docker compose down --volumes
+
+seed:
+	go run ./pkg/seeders/seed.go
