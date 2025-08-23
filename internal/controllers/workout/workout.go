@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"workout_tracker/internal/config"
+	exeModel "workout_tracker/internal/model/exercise"
 	model "workout_tracker/internal/model/workout"
 	"workout_tracker/pkg/utils"
 
@@ -18,6 +19,21 @@ type WorkoutPlan struct {
 	Repetitions int64   `json:"repetitions"`
 	Weight      float32 `json:"weight"`
 	Order       int64   `json:"order"`
+}
+type WorkoutPlanDetails struct {
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	ExerciseId  exeModel.Exercise `json:"exercise"`
+	Sets        int64             `json:"sets"`
+	Repetitions int64             `json:"repetitions"`
+	Weight      float32           `json:"weight"`
+	Order       int64             `json:"order"`
+}
+type WorkoutReport struct {
+	WorkoutName   string  `json:"workout_name"`
+	TotalReps     uint    `json:"total_reps"`
+	AvgWeight     float64 `json:"average_weight"`
+	TotalWorkouts int64   `json:"total_workouts"`
 }
 
 // @Tags Workout
@@ -46,7 +62,7 @@ func GetMyWorkouts(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "No workouts found"})
 		return
 	}
-	c.JSON(http.StatusOK, workouts)
+	c.JSON(http.StatusOK, gin.H{"message": "All workouts retrieved successfully", "data": workouts})
 }
 
 // @Tags Workout
@@ -79,7 +95,23 @@ func GetWorkoutByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Workout plan not found"})
 		return
 	}
-	c.JSON(http.StatusOK, workout)
+
+	var exercise exeModel.Exercise
+	if err := config.GetDB().First(&exercise, workout.ExerciseId).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Exercise not found"})
+		return
+	}
+
+	response := WorkoutPlanDetails{
+		Name:        workout.Name,
+		Description: workout.Description,
+		ExerciseId:  exercise,
+		Sets:        workout.Sets,
+		Repetitions: workout.Repetitions,
+		Weight:      workout.Weight,
+		Order:       workout.Order,
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Workout retrieved successfully", "data": response})
 }
 
 // @Tags Workout
@@ -111,8 +143,7 @@ func CreateWorkout(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create workout"})
 		return
 	}
-
-	c.JSON(http.StatusCreated, reqBody)
+	c.JSON(http.StatusCreated, gin.H{"message": "Workout created successfully", "data": reqBody})
 }
 
 // @Tags Workout
@@ -171,7 +202,7 @@ func UpdateWorkout(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve updated workout plan"})
 		return
 	}
-	c.JSON(http.StatusAccepted, updatedWorkout)
+	c.JSON(http.StatusAccepted, gin.H{"message": "Workout plan updated successfully", "data": updatedWorkout})
 }
 
 // @Tags Workout
@@ -211,4 +242,35 @@ func DeleteWorkout(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, gin.H{"message": "Workout plan deleted"})
+}
+
+// @Tags Workout
+// @Summary Get user workout reports
+// @Description Get the workout reports of the authenticated user
+// @Accept json
+// @Produce json
+// @Success 200 {object} WorkoutReport
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /workouts/reports [get]
+func GenerateWorkoutReport(c *gin.Context) {
+	userId, err := utils.ExtractUserIdFromJWTToken(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var report []WorkoutReport
+	selectStatement := "name as workout_name, SUM(repetitions) as total_reps, AVG(weight) as avg_weight, COUNT(*) as total_workouts"
+	result := config.GetDB().Model(&WorkoutPlan{}).Select(selectStatement).Where("user_id = ?", userId).Group("name").Scan(&report)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate report"})
+		return
+	}
+	if len(report) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No workout data found for this user"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Workout report generated successfully", "data": report})
 }

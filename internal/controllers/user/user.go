@@ -33,6 +33,7 @@ func GetMyProfile(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+
 	var user model.User
 	if err := config.GetDB().Where("ID = ?", userId).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -42,13 +43,12 @@ func GetMyProfile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
-	// delete(user, "password") // Remove sensitive information
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{"message": "User profile retrieved successfully", "data": gin.H{
 		"first_name":  user.FirstName,
 		"last_name":   user.LastName,
 		"email":       user.Email,
 		"is_verified": user.IsVerified,
-	})
+	}})
 }
 
 // @Tags User

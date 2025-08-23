@@ -14,12 +14,10 @@ import (
 
 var DB *gorm.DB
 
-// LoadEnv loads environment variables from a .env file
 func LoadEnv() error {
 	return godotenv.Load()
 }
 
-// connectDatabase establishes a connection to the database
 func connectDatabase() {
 	LoadEnv()
 	conn, err := gorm.Open("mysql", os.Getenv("DATABASE_URL"))
@@ -35,7 +33,6 @@ func GetDB() *gorm.DB {
 	return DB
 }
 
-// Init initializes the database connection and migrates the User model
 func init() {
 	connectDatabase()
 	DB = GetDB()

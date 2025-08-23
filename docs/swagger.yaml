@@ -55,6 +55,17 @@ definitions:
       weight:
         type: number
     type: object
+  internal_controllers_workout.WorkoutReport:
+    properties:
+      average_weight:
+        type: number
+      total_reps:
+        type: integer
+      total_workouts:
+        type: integer
+      workout_name:
+        type: string
+    type: object
   internal_controllers_workout.WorkoutSchedule:
     properties:
       completed_date:
@@ -721,6 +732,39 @@ paths:
       summary: Update user workout plan
       tags:
       - Workout
+  /workouts/reports:
+    get:
+      consumes:
+      - application/json
+      description: Get the workout reports of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controllers_workout.WorkoutReport'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user workout reports
+      tags:
+      - Workout
   /workouts/schedules:
     get:
       consumes:
@@ -842,6 +886,51 @@ paths:
               type: string
             type: object
       summary: Get user workout schedule by id
+      tags:
+      - Workout
+  /workouts/schedules/status:
+    get:
+      consumes:
+      - application/json
+      description: Filter the workout schedule of the authenticated user by status
+      parameters:
+      - description: Workout Status
+        in: query
+        name: status
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_controllers_workout.WorkoutSchedule'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Filter user workout schedule by status
       tags:
       - Workout
 security:

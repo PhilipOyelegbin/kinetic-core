@@ -22,7 +22,7 @@ func GetAllExercises(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, data)
+	c.JSON(http.StatusOK, gin.H{"message": "All exercises retrieved successfully", "data": data})
 }
 
 // @Tags Exercise
@@ -39,5 +39,5 @@ func GetAllCategories(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, data)
+	c.JSON(http.StatusOK, gin.H{"message": "All exercise categories retrieved successfully", "data": data})
 }

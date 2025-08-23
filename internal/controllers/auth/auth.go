@@ -22,11 +22,11 @@ type RegisterUser struct {
 	Password  string `json:"password"`
 }
 type LoginUser struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 type PasswordReset struct {
-	Password       string `json:"password"`
+	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirm_password"`
 }
 
@@ -47,7 +47,6 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// verify user input
 	if reqBody.FirstName == "" || reqBody.LastName == "" || reqBody.Email == "" || reqBody.Password == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "All fields are required"})
 		return
@@ -56,17 +55,17 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists"})
 		return
 	}
-	// hash the password and generate the verification token
+
 	hash, err := argon2id.CreateHash(reqBody.Password, argon2id.DefaultParams)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
+
 	reqBody.Password = hash
 	token, exp := utils.GenerateCodeAndTime()
 	reqBody.VerifyToken = token
 	reqBody.VerifyExpTime = exp
-	// save the user
 	res := config.GetDB().Create(&reqBody)
 	if res.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
@@ -75,13 +74,12 @@ func Register(c *gin.Context) {
 
 	subject := "Please verify your email"
 	message := fmt.Sprintf("Subject: %s\n\nHi %s,\n\nPlease verify your email by clicking on the following link:\n\n- %s/verify-email?token=%s\n\nThank you!\n\nWarm regards,\n\nKinetic Core Team", subject, reqBody.FirstName, os.Getenv("APP_URL"), reqBody.VerifyToken)
-
 	err = utils.SendEmail(reqBody.Email, reqBody.FirstName, subject, message)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send verification email"})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message":  "Verification mail sent, check your junk or promotion folder!"})
+	c.JSON(http.StatusCreated, gin.H{"message": "Verification mail sent, check your junk or promotion folder!"})
 }
 
 // @Tags Auth
@@ -123,13 +121,12 @@ func SendVerificationEmail(c *gin.Context) {
 
 	subject := "Please verify your email"
 	message := fmt.Sprintf("Subject: %s\n\nHi %s,\n\nPlease verify your email by clicking on the following link:\n\n- %s/verify-email?token=%s\n\nThank you!\n\nWarm regards,\n\nKinetic Core Team", subject, user.FirstName, os.Getenv("APP_URL"), user.VerifyToken)
-
 	err := utils.SendEmail(user.Email, user.FirstName, subject, message)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send verification email"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message":  "Mail sent, check your junk or promotion folder!"})
+	c.JSON(http.StatusOK, gin.H{"message": "Mail sent, check your junk or promotion folder!"})
 }
 
 // @Tags Auth
@@ -149,7 +146,6 @@ func VerifyEmail(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Token is required"})
 	}
 
-	// verify the token
 	var user model.User
 	if err := config.GetDB().Where("verify_token = ?", token).First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -161,14 +157,11 @@ func VerifyEmail(c *gin.Context) {
 	}
 
 	convertedExpTime := time.Unix(user.VerifyExpTime, 0)
-
-	// check if the token is expired
 	if convertedExpTime.Before(time.Now()) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has expired"})
 		return
 	}
 
-	// mark the user as verified
 	user.IsVerified = true
 	user.VerifyToken = ""
 	user.VerifyExpTime = 0
@@ -176,7 +169,6 @@ func VerifyEmail(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify email"})
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully"})
 }
 
@@ -196,37 +188,33 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// validate the user input
 	if reqBody.Email == "" || reqBody.Password == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "All fields are required"})
 		return
 	}
 
-	// verify the user
 	var user model.User
 	verifyEmail := config.GetDB().Where("email = ?", reqBody.Email).First(&user)
 	if verifyEmail.Error != nil {
 		if verifyEmail.Error == gorm.ErrRecordNotFound {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-            return
-        }
-        log.Printf("Database error during authentication: %v", verifyEmail.Error)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-        return
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			return
+		}
+		log.Printf("Database error during authentication: %v", verifyEmail.Error)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
 	}
 
 	match, err := argon2id.ComparePasswordAndHash(reqBody.Password, user.Password)
-    if err != nil {
-        log.Printf("Error during password comparison: %v", err)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-        return
-    }
-
+	if err != nil {
+		log.Printf("Error during password comparison: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
 	if !match {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
-
 	if !user.IsVerified {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email not verified"})
 		return
@@ -268,7 +256,7 @@ func SendForgotPasswordEmail(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email not verified"})
 		return
 	}
-	
+
 	token, exp := utils.GenerateCodeAndTime()
 	user.ResetToken = token
 	user.ResetExpTime = exp
@@ -279,13 +267,12 @@ func SendForgotPasswordEmail(c *gin.Context) {
 
 	subject := "Reset your password"
 	message := fmt.Sprintf("Subject: %s\n\nHi %s,\n\nPlease reset your password by clicking on the following link:\n\n- %s/reset-password?token=%s\n\nThank you!\n\nWarm regards,\n\nKinetic Core Team", subject, user.FirstName, os.Getenv("APP_URL"), user.ResetToken)
-
 	err := utils.SendEmail(user.Email, user.FirstName, subject, message)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send forgot password email"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message":  "Mail sent, check your junk or promotion folder!"})
+	c.JSON(http.StatusOK, gin.H{"message": "Mail sent, check your junk or promotion folder!"})
 }
 
 // @Tags Auth
@@ -306,6 +293,7 @@ func ResetPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Token is required"})
 		return
 	}
+
 	var reqBody PasswordReset
 	if err := c.ShouldBindJSON(&reqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -331,8 +319,6 @@ func ResetPassword(c *gin.Context) {
 	}
 
 	convertedExpTime := time.Unix(user.ResetExpTime, 0)
-
-	// check if the token is expired
 	if convertedExpTime.Before(time.Now()) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has expired"})
 		return
@@ -343,6 +329,7 @@ func ResetPassword(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
+
 	user.Password = hash
 	user.ResetToken = ""
 	user.ResetExpTime = 0
@@ -350,6 +337,5 @@ func ResetPassword(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset password"})
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{"message": "Password reset successfully"})
 }

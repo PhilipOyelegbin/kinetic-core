@@ -35,4 +35,6 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	api.GET("/workouts/schedules", workout.GetMyWorkoutSchedules)
 	api.POST("/workouts/schedules", workout.CreateSchedule)
 	api.GET("/workouts/schedules/:id", workout.GetScheduleByID)
+	api.GET("/workouts/schedules/status", workout.FilterByStatus)
+	api.GET("/workouts/reports", workout.GenerateWorkoutReport)
 }

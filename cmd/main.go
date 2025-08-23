@@ -6,13 +6,17 @@ import (
 	"os"
 	routes "workout_tracker/api"
 	"workout_tracker/internal/config"
+	"workout_tracker/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
+	"github.com/juju/ratelimit"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	_ "workout_tracker/docs"
 )
+
+var rateLimiter = ratelimit.NewBucketWithRate(5, 1)
 
 // @title Kinetic Core API
 // @version 1.0
@@ -34,19 +38,18 @@ func main() {
 	if env != nil {
 		log.Fatal("Error loading .env file")
 	}
+
 	app := gin.Default()
 	app.Use(gin.Recovery())
 	app.Use(gin.Logger())
-	api := app.Group("/api/v1")
+	api := app.Group("/api/v1", middleware.NonBlockingRateLimitMiddleware(rateLimiter))
 	{
 		api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 		routes.RegisterRoutes(api)
 	}
-
 	app.GET("/", gin.HandlerFunc(func(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/api/v1/swagger/index.html")
 	}))
-
 	err := app.Run(":" + os.Getenv("PORT"))
 	if err != nil {
 		log.Fatal(err)
