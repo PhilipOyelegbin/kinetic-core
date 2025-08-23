@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	routes "workout_tracker/api"
 	"workout_tracker/internal/config"
 	"workout_tracker/pkg/middleware"
@@ -15,8 +16,6 @@ import (
 
 	_ "workout_tracker/docs"
 )
-
-var rateLimiter = ratelimit.NewBucketWithRate(5, 1)
 
 // @title Kinetic Core API
 // @version 1.0
@@ -38,13 +37,16 @@ func main() {
 	if env != nil {
 		log.Fatal("Error loading .env file")
 	}
+	rate, _ := strconv.ParseInt(os.Getenv("RATE"), 10, 64)
+	capacity, _ := strconv.ParseInt(os.Getenv("CAPACITY"), 10, 64)
+	rateLimiter := ratelimit.NewBucketWithRate(float64(rate), capacity)
 
 	app := gin.Default()
 	app.Use(gin.Recovery())
 	app.Use(gin.Logger())
 	api := app.Group("/api/v1", middleware.NonBlockingRateLimitMiddleware(rateLimiter))
 	{
-		api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+		api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.DocExpansion("none")))
 		routes.RegisterRoutes(api)
 	}
 	app.GET("/", gin.HandlerFunc(func(c *gin.Context) {
